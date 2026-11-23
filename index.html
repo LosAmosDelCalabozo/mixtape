@@ -21,7 +21,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 .hifi{position:relative;display:grid;gap:14px;padding:16px 18px 20px;border-radius:6px;
  background:linear-gradient(#2a2b2f,#141416 30%,#0e0e10);border-top:3px solid #9fa3a9;border-bottom:5px solid #050505;
  box-shadow:0 18px 30px rgba(40,20,10,.55);
- grid-template-columns:1fr 1.25fr 1fr;grid-template-areas:"plate plate plate" "da tt db" "da ctl db"}
+ grid-template-columns:minmax(0,1fr) minmax(0,1.25fr) minmax(0,1fr);grid-template-areas:"plate plate plate" "da tt db" "da ctl db"}
 .hifi::before,.hifi::after{content:"";position:absolute;top:-3px;bottom:-5px;width:24px;border-radius:4px;
  background:repeating-linear-gradient(88deg,#6a3b1c 0 5px,#7d4624 5px 9px,#5a3016 9px 15px)}
 .hifi::before{left:-24px}.hifi::after{right:-24px}
@@ -34,18 +34,19 @@ button{font:inherit;color:inherit;cursor:pointer}
  clip-path:polygon(50% 0,60% 12%,75% 6%,78% 22%,94% 25%,88% 40%,100% 50%,88% 60%,94% 75%,78% 78%,75% 94%,60% 88%,50% 100%,40% 88%,25% 94%,22% 78%,6% 75%,12% 60%,0 50%,12% 40%,6% 25%,22% 22%,25% 6%,40% 12%)}
 
 /* teletext */
-.tt{grid-area:tt;background:#000;border-radius:14px/10px;border:6px solid #1c1c1f;box-shadow:inset 0 0 30px rgba(0,0,0,.9),0 0 0 2px #3b3c41;position:relative;overflow:hidden;font:24px/1.05 'VT323',monospace;text-transform:uppercase;display:flex;flex-direction:column;min-height:330px}
+.tt{grid-area:tt;background:#000;border-radius:14px/10px;border:6px solid #1c1c1f;box-shadow:inset 0 0 30px rgba(0,0,0,.9),0 0 0 2px #3b3c41;position:relative;overflow:hidden;font:24px/1.05 'VT323',monospace;text-transform:uppercase;display:flex;flex-direction:column;height:380px;min-width:0}
 .tt::after{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,.22) 0 1px,transparent 1px 3px)}
-.tt .hd{display:flex;justify-content:space-between;gap:8px;padding:4px 8px;color:#fff}
+.tt .hd{display:flex;gap:8px;padding:4px 8px;color:#fff;white-space:nowrap;overflow:hidden}
+#ttName{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;padding-left:14px}
 .tt .hd i{font-style:normal;color:var(--tc)}.tt .hd b{color:var(--tg);font-weight:400}
 .tt .ttl{background:var(--tb);padding:4px 8px 6px}
-.tt h2{margin:0;font:400 44px/.95 'VT323';color:var(--ty);overflow-wrap:anywhere}
-.tt .art{color:var(--tc)}
-.tt .msg{padding:4px 8px;color:var(--tm)}
+.tt h2{margin:0;height:42px;font:400 44px/42px 'VT323';color:var(--ty);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tt .art{color:var(--tc);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tt .msg{padding:4px 8px;color:var(--tm);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .flash{animation:fl 1s steps(1) infinite}@keyframes fl{50%{visibility:hidden}}
-.tt ol{list-style:none;margin:0;padding:2px 0;flex:1}
-.row{display:grid;grid-template-columns:48px 1fr auto;gap:6px;width:100%;background:none;border:0;text-align:left;text-transform:uppercase;font:inherit;color:#fff;padding:1px 8px}
-.row span{color:var(--ty)}.row em{font-style:normal;color:var(--tc)}
+.tt ol{list-style:none;margin:0;padding:2px 0;flex:1;min-height:0;overflow-y:auto}
+.row{display:grid;grid-template-columns:48px minmax(0,1fr) auto;gap:6px;width:100%;background:none;border:0;text-align:left;text-transform:uppercase;font:inherit;color:#fff;padding:1px 8px}
+.row span{color:var(--ty)}.row em{font-style:normal;color:var(--tc);max-width:11em}.row b,.row em{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .row:hover{background:#1a1a60}
 .cur .row{background:var(--tc);color:#000}.cur .row span,.cur .row em{color:#000}
 .cur .el{grid-column:2/4;color:#a00;text-decoration:none}
@@ -55,7 +56,7 @@ button{font:inherit;color:inherit;cursor:pointer}
 .fast .on{outline:2px solid #fff;outline-offset:-3px}
 
 /* decks */
-.deck{background:linear-gradient(#303136,#1a1b1e);border:1px solid #45464b;border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:12px}
+.deck{min-width:0;background:linear-gradient(#303136,#1a1b1e);border:1px solid #45464b;border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:12px}
 #d0{grid-area:da}#d1{grid-area:db}
 .dh{display:flex;align-items:center;justify-content:space-between;color:#cfd1d6;font-size:18px}
 .lcd{display:flex;gap:10px;align-items:baseline;background:#1b0b02;border:1px solid #000;border-radius:3px;padding:2px 10px;font:30px/1 'VT323';color:var(--led);text-shadow:0 0 8px var(--led);box-shadow:inset 0 0 8px #000}
@@ -95,13 +96,13 @@ output{min-width:3.5em;color:var(--led)}
 .keyhelp{max-width:760px;margin:12px auto 0;text-align:center;color:#5b5140;font-size:14px}
 .ovl{position:absolute;left:0;right:0;bottom:0;z-index:3;padding:30px 14px 10px;background:linear-gradient(transparent,rgba(0,0,0,.85));display:flex;flex-direction:column;gap:8px;opacity:0;transition:opacity .25s}
 .screen.show .ovl,.screen.paused .ovl,.ovl:focus-within{opacity:1}
-.ovt{font:28px/1 'VT323';color:var(--ty);text-transform:uppercase}
+.ovt{font:28px/1 'VT323';color:var(--ty);text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ovb{display:flex;align-items:center;gap:6px}
 .ovb button{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.3);border-radius:4px;color:#fff;min-width:40px;height:34px;font:700 14px system-ui,sans-serif;padding:0 8px}
 .ovb button:hover{background:rgba(255,255,255,.32)}
 .ovb span{margin-left:auto;font:24px 'VT323';color:#fff}
 .screen:fullscreen{aspect-ratio:auto;border-radius:0;box-shadow:none}
-.marq{overflow:hidden;white-space:nowrap;height:30px;padding:2px 0;background:#1b0b02;border:1px solid #000;border-radius:3px;box-shadow:inset 0 0 8px #000;font:24px/1.1 'VT323';color:var(--led);text-shadow:0 0 8px var(--led);text-transform:uppercase}
+.marq{contain:inline-size;min-width:0;overflow:hidden;white-space:nowrap;height:30px;padding:2px 0;background:#1b0b02;border:1px solid #000;border-radius:3px;box-shadow:inset 0 0 8px #000;font:24px/1.1 'VT323';color:var(--led);text-shadow:0 0 8px var(--led);text-transform:uppercase}
 .marq span{display:inline-block;padding-left:100%;animation:mq 14s linear infinite}
 @keyframes mq{to{transform:translateX(-100%)}}
 @media (prefers-reduced-motion:reduce){.marq span{animation:none;padding-left:8px}}
@@ -120,6 +121,7 @@ dialog .hint{margin:0;color:#aeb1b8}
 .srcrow input{flex:1;font-size:13px;color:#aeb1b8}
 .rm{background:#3a1010;border:1px solid #6a2020;color:#fff;border-radius:4px;width:36px;cursor:pointer}
 .rm:hover{background:#6a2020}
+@media (max-width:1240px){.cd{display:none}}
 /* the telly */
 .telly{margin:34px auto 0;max-width:760px;position:relative}
 .bezel{background:linear-gradient(#cdc8ba,#aaa595);border-radius:26px;padding:22px 22px 12px;box-shadow:0 14px 24px rgba(40,20,10,.5),inset 0 2px 0 #eee}
@@ -218,43 +220,11 @@ footer{text-align:center;margin-top:26px;color:#5b5140;font-weight:700}
 /* ---- EDIT YOUR TAPES HERE (or use the "Edit tapes" button on the page) ----
    src = video file path, t = song name, a = artist, r = why you picked it (scrolls on the deck) */
 const T=[
- {
-  "name": "Natsukashi",
-  "sub": "なつかしい · the good old days",
-  "stripe": "#e4352b",
-  "fs": 31,
-  "tracks": [
-   {
-    "src": "videos/ouran-opening.mp4",
-    "t": "Ouran Host Club Opening",
-    "a": "Opening",
-    "r": "The opening that took over every Saturday afternoon"
-   },
-   {
-    "src": "videos/Helen%20Love%20-%20Does%20Your%20Heart%20Go%20Boom.mp4",
-    "t": "Helen Love",
-    "a": "Does Your Heart Go Boom",
-    "r": "You make my heart go Boom"
-   }
-  ]
- },
- {
-  "name": "Recommendations",
-  "sub": "tracks you should hear",
-  "stripe": "#2b64d9",
-  "fs": 25,
-  "tracks": [
-   {
-    "src": "videos/sakura-kiss.mp4",
-    "t": "Sakura Kiss",
-    "a": "Radio edit",
-    "r": "Pure sparkle. Play it loud."
-   }
-  ]
- }
+ {name:'Natsukashi',sub:'なつかしい · the good old days',stripe:'#e4352b',fs:31,tracks:[
+  {src:'videos/ouran-opening.mp4',t:'Ouran Host Club Opening',a:'Opening',r:'The opening that took over every Saturday afternoon'}]},
+ {name:'Recommendations',sub:'tracks you should hear',stripe:'#2b64d9',fs:25,tracks:[
+  {src:'videos/sakura-kiss.mp4',t:'Sakura Kiss',a:'Radio edit',r:'Pure sparkle. Play it loud.'}]}
 ];
-
-
 /* ------------------------------------------------------------------------- */
 const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
 const D=T.map(()=>({i:0,time:0,dur:0,mode:'stop'}));
@@ -338,6 +308,7 @@ const ACT={play,stop,pause,prev:d=>step(d,-1),next:d=>step(d,1),rew:d=>wind(d,-1
 
 /* ---- display ---- */
 const fmt=s=>{s=Math.max(0,s|0);return(s/60|0)+':'+String(s%60).padStart(2,'0')};
+function fitTitle(){const h=$('#ttTitle');let z=44;h.style.fontSize=z+'px';while(h.scrollWidth>h.clientWidth&&z>20){z-=2;h.style.fontSize=z+'px'}}
 function ui(){
  D.forEach((k,d)=>{const el=$('#d'+d);el.dataset.m=k.mode;
   const tr=T[d].tracks[k.i],tx=tr.r||(tr.t+' - '+tr.a),mq=$('.marq span',el);
@@ -354,13 +325,15 @@ function ui(){
   const m=msg||{stop:ready?'PRESS PLAY ON TAPE':'WARMING UP THE VALVES...',play:'NOW PLAYING',pause:'PAUSED',ff:'>> WINDING ON',rew:'<< REWINDING'}[k.mode];
   const e=$('#ttMsg');e.textContent=m;e.classList.toggle('flash',k.mode==='stop'||!!msg);
   $('#ttList').innerHTML=t.tracks.map((r,i)=>`<li class="${i===k.i?'cur':''}"><button class="row" data-i="${i}"><span>${base+i+1}</span><b style="font-weight:400">${r.t}</b><em>${r.a}</em>${i===k.i&&k.mode!=='stop'?'<u class="el"></u>':''}</button></li>`).join('');
-  $('#fR').classList.toggle('on',sel===0);$('#fG').classList.toggle('on',sel===1)}
+  $('#fR').classList.toggle('on',sel===0);$('#fG').classList.toggle('on',sel===1);
+  const ol=$('#ttList'),cr=$('.cur',ol);if(cr)ol.scrollTop+=cr.getBoundingClientRect().top-ol.getBoundingClientRect().top-ol.clientHeight/2;
+  fitTitle()}
  const ad=cur?cur.d:sel,ak=D[ad],at=T[ad].tracks[ak.i];
  $('#ovTitle').textContent=at.t+' - '+at.a;$('#ovPlay').textContent=ak.mode==='play'?'❚❚':'▶';
  $('#ovSeek i').style.width=(ak.dur?Math.min(100,ak.time/ak.dur*100):0)+'%';$('#ovTm').textContent=fmt(ak.time)+' / '+fmt(ak.dur);
  $('#screen').classList.toggle('paused',ak.mode!=='play');
  const el=$('.el');if(el)el.textContent='  '+fmt(k.time)+' / '+fmt(k.dur);
- $('#clk').textContent=new Date().toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'})+' '+new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+ const nw=new Date();$('#clk').innerHTML='<span class="cd">'+nw.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'})+' </span>'+nw.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
 }
 $('#ttList').addEventListener('click',e=>{const b=e.target.closest('[data-i]');if(!b)return;const k=D[sel];k.i=+b.dataset.i;k.time=0;k.dur=0;if(cur&&cur.d===sel)cur=null;play(sel);ui()});
 $('#fR').onclick=()=>{sel=0;ui()};$('#fG').onclick=()=>{sel=1;ui()};
@@ -458,6 +431,7 @@ $('#edFile').onchange=e=>{const ti=+e.target.dataset.t;
 $('#edCopy').onclick=()=>{const code='const T='+JSON.stringify(T.map(t=>({...t,tracks:t.tracks.filter(r=>!isBlob(r))})),null,1)+';';
  const ta=$('#edCode');ta.hidden=false;ta.value=code;ta.select();try{navigator.clipboard.writeText(code)}catch(x){}};
 $('#edReset').onclick=()=>{if(confirm('Forget the list saved in this browser?')){try{localStorage.removeItem('mixtape-tapes')}catch(x){}location.reload()}};
+addEventListener('resize',fitTitle);
 ui();
 </script>
 </body>
