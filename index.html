@@ -218,11 +218,43 @@ footer{text-align:center;margin-top:26px;color:#5b5140;font-weight:700}
 /* ---- EDIT YOUR TAPES HERE (or use the "Edit tapes" button on the page) ----
    src = video file path, t = song name, a = artist, r = why you picked it (scrolls on the deck) */
 const T=[
- {name:'Natsukashi',sub:'なつかしい · the good old days',stripe:'#e4352b',fs:31,tracks:[
-  {src:'videos/ouran-opening.mp4',t:'Ouran Host Club Opening',a:'Opening',r:'The opening that took over every Saturday afternoon'}]},
- {name:'Recommendations',sub:'tracks you should hear',stripe:'#2b64d9',fs:25,tracks:[
-  {src:'videos/sakura-kiss.mp4',t:'Sakura Kiss',a:'Radio edit',r:'Pure sparkle. Play it loud.'}]}
+ {
+  "name": "Natsukashi",
+  "sub": "なつかしい · the good old days",
+  "stripe": "#e4352b",
+  "fs": 31,
+  "tracks": [
+   {
+    "src": "videos/ouran-opening.mp4",
+    "t": "Ouran Host Club Opening",
+    "a": "Opening",
+    "r": "The opening that took over every Saturday afternoon"
+   },
+   {
+    "src": "videos/Helen%20Love%20-%20Does%20Your%20Heart%20Go%20Boom.mp4",
+    "t": "Helen Love",
+    "a": "Does Your Heart Go Boom",
+    "r": "You make my heart go Boom"
+   }
+  ]
+ },
+ {
+  "name": "Recommendations",
+  "sub": "tracks you should hear",
+  "stripe": "#2b64d9",
+  "fs": 25,
+  "tracks": [
+   {
+    "src": "videos/sakura-kiss.mp4",
+    "t": "Sakura Kiss",
+    "a": "Radio edit",
+    "r": "Pure sparkle. Play it loud."
+   }
+  ]
+ }
 ];
+
+
 /* ------------------------------------------------------------------------- */
 const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
 const D=T.map(()=>({i:0,time:0,dur:0,mode:'stop'}));
