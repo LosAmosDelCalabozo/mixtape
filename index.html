@@ -93,6 +93,14 @@ button{font:inherit;color:inherit;cursor:pointer}
 .opts .bass{font-size:15px;padding:6px 10px}
 output{min-width:3.5em;color:var(--led)}
 .keyhelp{max-width:760px;margin:12px auto 0;text-align:center;color:#5b5140;font-size:14px}
+.ovl{position:absolute;left:0;right:0;bottom:0;z-index:3;padding:30px 14px 10px;background:linear-gradient(transparent,rgba(0,0,0,.85));display:flex;flex-direction:column;gap:8px;opacity:0;transition:opacity .25s}
+.screen.show .ovl,.screen.paused .ovl,.ovl:focus-within{opacity:1}
+.ovt{font:28px/1 'VT323';color:var(--ty);text-transform:uppercase}
+.ovb{display:flex;align-items:center;gap:6px}
+.ovb button{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.3);border-radius:4px;color:#fff;min-width:40px;height:34px;font:700 14px system-ui,sans-serif;padding:0 8px}
+.ovb button:hover{background:rgba(255,255,255,.32)}
+.ovb span{margin-left:auto;font:24px 'VT323';color:#fff}
+.screen:fullscreen{aspect-ratio:auto;border-radius:0;box-shadow:none}
 /* the telly */
 .telly{margin:34px auto 0;max-width:760px;position:relative}
 .bezel{background:linear-gradient(#cdc8ba,#aaa595);border-radius:26px;padding:22px 22px 12px;box-shadow:0 14px 24px rgba(40,20,10,.5),inset 0 2px 0 #eee}
@@ -100,7 +108,7 @@ output{min-width:3.5em;color:var(--led)}
 #yt{position:absolute;inset:0;width:100%;height:100%;border:0;z-index:1;object-fit:contain;background:#000}
 .screen.idle #yt{opacity:0}
 .bars{position:absolute;inset:0;display:flex;align-items:flex-end;justify-content:center;background:linear-gradient(90deg,#d0d0d0 0 14%,#d0d000 0 28%,#00d0d0 0 42%,#00d000 0 57%,#d000d0 0 71%,#d00000 0 85%,#0000d0 0)}
-.bars span{margin-bottom:8%;background:#000;color:#fff;font:34px 'VT323';padding:0 14px;text-transform:uppercase}
+.bars span{margin-bottom:16%;background:#000;color:#fff;font:34px 'VT323';padding:0 14px;text-transform:uppercase}
 .shield{position:absolute;inset:0;z-index:2;background:radial-gradient(ellipse at center,transparent 60%,rgba(0,0,0,.4)),repeating-linear-gradient(0deg,rgba(0,0,0,.16) 0 1px,transparent 1px 3px)}
 .tbar{display:flex;gap:10px;align-items:center;padding-top:12px;color:#4a463a;font-weight:700}
 .tbar .pwr{width:10px;height:10px;border-radius:50%;background:var(--red);box-shadow:0 0 6px var(--red)}
@@ -162,6 +170,15 @@ footer{text-align:center;margin-top:26px;color:#5b5140;font-weight:700}
     <div class="bars"><span>Please stand by</span></div>
     <video id="yt" playsinline preload="metadata"></video>
     <div class="shield"></div>
+    <div class="ovl" id="ovl">
+     <div class="ovt" id="ovTitle"></div>
+     <div class="seek" id="ovSeek" tabindex="0" role="slider" aria-label="Seek"><i></i></div>
+     <div class="ovb">
+      <button data-o="prev" aria-label="Previous track">|◀</button><button data-o="rew" aria-label="Rewind">◀◀</button><button data-o="play" id="ovPlay" aria-label="Play or pause">▶</button><button data-o="ff" aria-label="Fast forward">▶▶</button><button data-o="next" aria-label="Next track">▶|</button><button data-o="stop" aria-label="Stop">■</button>
+      <span id="ovTm">0:00 / 0:00</span>
+      <button data-o="mute">Mute</button><button data-o="full" aria-label="Full screen">⛶</button>
+     </div>
+    </div>
    </div>
    <div class="tbar"><i class="pwr"></i><button id="bTelly">Hide video</button><button id="bFull">Full screen</button><button id="bPip">Pop out</button><span>Teletext · Fastext · Nicam Stereo</span></div>
   </div>
@@ -275,6 +292,10 @@ function ui(){
   const e=$('#ttMsg');e.textContent=m;e.classList.toggle('flash',k.mode==='stop'||!!msg);
   $('#ttList').innerHTML=t.tracks.map((r,i)=>`<li class="${i===k.i?'cur':''}"><button class="row" data-i="${i}"><span>${base+i+1}</span><b style="font-weight:400">${r.t}</b><em>${r.a}</em>${i===k.i&&k.mode!=='stop'?'<u class="el"></u>':''}</button></li>`).join('');
   $('#fR').classList.toggle('on',sel===0);$('#fG').classList.toggle('on',sel===1)}
+ const ad=cur?cur.d:sel,ak=D[ad],at=T[ad].tracks[ak.i];
+ $('#ovTitle').textContent=at.t+' - '+at.a;$('#ovPlay').textContent=ak.mode==='play'?'❚❚':'▶';
+ $('#ovSeek i').style.width=(ak.dur?Math.min(100,ak.time/ak.dur*100):0)+'%';$('#ovTm').textContent=fmt(ak.time)+' / '+fmt(ak.dur);
+ $('#screen').classList.toggle('paused',ak.mode!=='play');
  const el=$('.el');if(el)el.textContent='  '+fmt(k.time)+' / '+fmt(k.dur);
  $('#clk').textContent=new Date().toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'})+' '+new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
 }
@@ -299,6 +320,15 @@ const cells=$$('#spec div').map(c=>[...c.children]);
 setInterval(()=>{const on=D.some(k=>k.mode==='play'),b=bass.getAttribute('aria-pressed')==='true';
  lv=lv.map((v,c)=>{const low=c<3,tg=on?Math.random()*ROWS*(low&&b?1.25:.8)+(low?1.5:0):0;return Math.max(0,Math.min(ROWS,v+(tg-v)*.5-(on?0:.6)))});
  cells.forEach((col,c)=>col.forEach((x,r)=>x.classList.toggle('on',r<Math.round(lv[c]))))},110);
+
+/* ---- on-video controls ---- */
+const act=()=>cur?cur.d:sel,scr=$('#screen');let ot;
+$('#ovl').addEventListener('click',e=>{const b=e.target.closest('[data-o]');if(!b)return;const o=b.dataset.o,d=act();
+ if(o==='play'){D[d].mode==='play'?pause(d):play(d)}else if(o==='full')full();else if(o==='mute')$('#bMute').click();else{sel=d;ACT[o](d)}ui()});
+$('#ovSeek').onclick=e=>{const r=e.currentTarget.getBoundingClientRect();seekFrac(act(),(e.clientX-r.left)/r.width)};
+$('.shield').onclick=()=>{const d=act();D[d].mode==='play'?pause(d):play(d);ui()};
+$('.shield').ondblclick=full;
+['mousemove','touchstart'].forEach(ev=>scr.addEventListener(ev,()=>{scr.classList.add('show');clearTimeout(ot);ot=setTimeout(()=>scr.classList.remove('show'),3000)},{passive:true}));
 
 /* ---- seeking ---- */
 function seekFrac(d,f){const k=D[d];if(!k.dur)return;k.time=Math.max(0,Math.min(.999,f))*k.dur;if(cur&&cur.d===d)P.seekTo(k.time);sel=d;ui()}

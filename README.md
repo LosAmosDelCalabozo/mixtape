@@ -101,6 +101,7 @@ Only one deck plays at a time. Starting a deck pauses the other where it was, an
 - **Chain decks:** when one tape ends, the other deck starts.
 - **Mute** and a **Pitch** slider (±10%). Pitch behaves like a real tape deck, so speed and pitch move together. Double-click the slider to reset it.
 - **Add videos:** pick video or audio files from your computer to add to the tape shown on the teletext. They last until you reload the page, and they aren't uploaded anywhere.
+- **On-video controls:** move the mouse over the video (or tap it) to get transport buttons, a seek bar, mute and full screen on the picture itself, including in full screen. Click the picture to play or pause, and double-click it for full screen.
 - **Pop out:** floats the video in a small window (Picture-in-Picture) where the browser supports it.
 - **Lock-screen and media-key controls:** the current title and artist show up in your OS or phone media controls.
 
