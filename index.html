@@ -101,6 +101,21 @@ output{min-width:3.5em;color:var(--led)}
 .ovb button:hover{background:rgba(255,255,255,.32)}
 .ovb span{margin-left:auto;font:24px 'VT323';color:#fff}
 .screen:fullscreen{aspect-ratio:auto;border-radius:0;box-shadow:none}
+.marq{overflow:hidden;white-space:nowrap;height:30px;padding:2px 0;background:#1b0b02;border:1px solid #000;border-radius:3px;box-shadow:inset 0 0 8px #000;font:24px/1.1 'VT323';color:var(--led);text-shadow:0 0 8px var(--led);text-transform:uppercase}
+.marq span{display:inline-block;padding-left:100%;animation:mq 14s linear infinite}
+@keyframes mq{to{transform:translateX(-100%)}}
+@media (prefers-reduced-motion:reduce){.marq span{animation:none;padding-left:8px}}
+dialog{width:min(720px,94vw);max-height:88vh;overflow:auto;background:#17181b;color:#eee;border:2px solid #6d7077;border-radius:8px;padding:16px 18px;box-shadow:0 20px 60px #000}
+dialog::backdrop{background:rgba(20,10,5,.7)}
+dialog h2{margin:0 0 4px;font:700 28px 'Saira Condensed'}
+dialog h3{margin:16px 0 6px;color:var(--ty);font:400 28px 'VT323';text-transform:uppercase}
+dialog .hint{margin:0;color:#aeb1b8}
+.erow{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px}
+.erow input,#edCode{background:#0a0a0b;border:1px solid #45464b;color:#fff;padding:6px 8px;border-radius:4px;font:inherit;font-size:16px;width:100%}
+.erow .rs,.erow .src{grid-column:1/3}
+.erow .src{color:#8b8e95;font-size:13px}
+#edCode{margin-top:12px;font-family:monospace;font-size:12px}
+.eb{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
 /* the telly */
 .telly{margin:34px auto 0;max-width:760px;position:relative}
 .bezel{background:linear-gradient(#cdc8ba,#aaa595);border-radius:26px;padding:22px 22px 12px;box-shadow:0 14px 24px rgba(40,20,10,.5),inset 0 2px 0 #eee}
@@ -156,6 +171,7 @@ footer{text-align:center;margin-top:26px;color:#5b5140;font-weight:700}
     <button class="bass" id="bShuf" aria-pressed="false"><i></i>Shuffle</button>
     <button class="bass" id="bChain" aria-pressed="false"><i></i>Chain decks</button>
     <button class="bass" id="bMute" aria-pressed="false"><i></i>Mute</button>
+    <button class="bass" id="bEdit"><i></i>Edit tapes</button>
     <button class="bass" id="bAdd"><i></i>Add videos</button>
     <input type="file" id="file" accept="video/*,audio/*" multiple hidden>
    </div>
@@ -183,23 +199,30 @@ footer{text-align:center;margin-top:26px;color:#5b5140;font-weight:700}
    <div class="tbar"><i class="pwr"></i><button id="bTelly">Hide video</button><button id="bFull">Full screen</button><button id="bPip">Pop out</button><span>Teletext · Fastext · Nicam Stereo</span></div>
   </div>
  </section>
- <p class="keyhelp">Keys: Space play/pause · ←/→ seek (Shift = 30s) · N/P next/previous · S stop · M mute · F full screen · V show/hide video · 1/2 switch tape · ↑/↓ volume · R repeat</p>
+ <dialog id="editor" aria-label="Edit tapes">
+  <h2>Edit tapes</h2>
+  <p class="hint">Changes show straight away and are remembered in this browser. To make them permanent for everyone, copy the code and paste it over the <code>const T=[...]</code> block in index.html.</p>
+  <div id="edBody"></div><textarea id="edCode" rows="8" readonly hidden></textarea>
+  <div class="eb"><button class="bass" id="edCopy">Copy tapes code</button><button class="bass" id="edReset">Reset my edits</button><button class="bass" id="edClose">Done</button></div>
+ </dialog>
+ <p class="keyhelp">Keys: Space play/pause · ←/→ seek (Shift = 30s) · N/P next/previous · S stop · M mute · F full screen · V show/hide video · 1/2 switch tape · ↑/↓ volume · R repeat · E edit tapes</p>
  <footer>Be kind. Rewind.</footer>
 </div>
 
 <script>
-/* ---- EDIT YOUR TAPES HERE: src = path to a video file, relative to this page ---- */
+/* ---- EDIT YOUR TAPES HERE (or use the "Edit tapes" button on the page) ----
+   src = video file path, t = song name, a = artist, r = why you picked it (scrolls on the deck) */
 const T=[
  {name:'Natsukashi',sub:'なつかしい · the good old days',stripe:'#e4352b',fs:31,tracks:[
-  {src:'videos/ouran-opening.mp4',t:'Ouran Host Club Opening',a:'Opening'}]},
+  {src:'videos/ouran-opening.mp4',t:'Ouran Host Club Opening',a:'Opening',r:'The opening that took over every Saturday afternoon'}]},
  {name:'Recommendations',sub:'tracks you should hear',stripe:'#2b64d9',fs:25,tracks:[
-  {src:'videos/sakura-kiss.mp4',t:'Sakura Kiss',a:'Radio edit'}]}
+  {src:'videos/sakura-kiss.mp4',t:'Sakura Kiss',a:'Radio edit',r:'Pure sparkle. Play it loud.'}]}
 ];
 /* ------------------------------------------------------------------------- */
 const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
 const D=T.map(()=>({i:0,time:0,dur:0,mode:'stop'}));
 const MOVING=['play','ff','rew'];
-let sel=0,ready=true,userMute=false,opt={rep:0,shuf:false,chain:false},cur=null,wt=null,vol=80,errs=0,msg='',mt=0,sig='',AC;
+let sel=0,ready=true,rev=0,userMute=false,opt={rep:0,shuf:false,chain:false},cur=null,wt=null,vol=80,errs=0,msg='',mt=0,sig='',AC;
 
 const KEYS=[['prev','|◀','Previous track'],['rew','◀◀','Rewind'],['play','▶','Play'],['ff','▶▶','Fast forward'],['next','▶|','Next track'],['pause','❚❚','Pause'],['stop','■','Stop']];
 const cassette=t=>`<svg viewBox="0 0 300 190" role="img" aria-label="Cassette: ${t.name}">
@@ -219,6 +242,7 @@ const cassette=t=>`<svg viewBox="0 0 300 190" role="img" aria-label="Cassette: $
 $$('.deck').forEach((el,d)=>{
  el.dataset.m='stop';
  el.innerHTML=`<div class="dh"><b>Deck ${'AB'[d]}</b><span class="lcd"><b class="cnt">000</b><i class="st">STOP</i></span></div>
+ <div class="marq" aria-label="Why this song"><span></span></div>
  <div class="door">${cassette(T[d])}</div>
  <div class="seek" tabindex="0" role="slider" aria-label="Tape position"><i></i></div><div class="tm"><span class="te">0:00</span><span class="tr">-0:00</span></div>
  <div class="keys">${KEYS.map(k=>`<button data-k="${k[0]}" aria-label="${k[2]}" title="${k[2]}">${k[1]}</button>`).join('')}</div>`;
@@ -279,12 +303,14 @@ const ACT={play,stop,pause,prev:d=>step(d,-1),next:d=>step(d,1),rew:d=>wind(d,-1
 const fmt=s=>{s=Math.max(0,s|0);return(s/60|0)+':'+String(s%60).padStart(2,'0')};
 function ui(){
  D.forEach((k,d)=>{const el=$('#d'+d);el.dataset.m=k.mode;
+  const tr=T[d].tracks[k.i],tx=tr.r||(tr.t+' - '+tr.a),mq=$('.marq span',el);
+  if(mq.dataset.v!==tx){mq.dataset.v=tx;mq.textContent=tx;mq.style.animationDuration=Math.max(9,tx.length*.28)+'s'}
   $('.cnt',el).textContent=String((k.time|0)%1000).padStart(3,'0');
   $('.st',el).textContent={stop:'STOP',play:'PLAY',pause:'PAUSE',ff:'FF >>',rew:'<< REW'}[k.mode];
   $$('[data-k]',el).forEach(b=>b.classList.toggle('down',b.dataset.k===k.mode));
   const p=k.dur?Math.min(1,k.time/k.dur):0;$('.pl',el).setAttribute('r',8+11*(1-p));$('.pr',el).setAttribute('r',8+11*p);
   $('.seek i',el).style.width=(p*100)+'%';$('.te',el).textContent=fmt(k.time);$('.tr',el).textContent='-'+fmt(k.dur?k.dur-k.time:0)});
- const k=D[sel],t=T[sel],base=sel?200:100,s=[sel,k.i,k.mode,msg,ready,t.tracks.length].join();
+ const k=D[sel],t=T[sel],base=sel?200:100,s=[sel,k.i,k.mode,msg,ready,t.tracks.length,rev].join();
  if(s!==sig){sig=s;
   $('#pg').textContent=base+k.i+1;$('#ttName').textContent=t.name+' Text';
   $('#ttTitle').textContent=t.tracks[k.i].t;$('#ttArt').textContent=t.tracks[k.i].a;
@@ -354,15 +380,31 @@ $('#bPip').onclick=()=>{if(document.pictureInPictureElement)document.exitPicture
  else if(V.requestPictureInPicture)V.requestPictureInPicture().catch(()=>say('POP-OUT NOT AVAILABLE'));else say('POP-OUT NOT SUPPORTED HERE')};
 const vk=n=>{const v=$('#vol');v.value=+v.value+n;v.oninput({target:v})};
 addEventListener('keydown',e=>{
- if(e.ctrlKey||e.metaKey||e.altKey||e.target.tagName==='INPUT'||(e.target.tagName==='BUTTON'&&(e.key===' '||e.key==='Enter')))return;
+ if(e.ctrlKey||e.metaKey||e.altKey||e.target.tagName==='INPUT'||document.querySelector('dialog[open]')||(e.target.tagName==='BUTTON'&&(e.key===' '||e.key==='Enter')))return;
  const d=sel,k=D[d],big=e.shiftKey?30:5,
  m={' ':()=>k.mode==='play'?pause(d):play(d),ArrowLeft:()=>seekBy(d,-big),ArrowRight:()=>seekBy(d,big),
-  n:()=>step(d,1),p:()=>step(d,-1),s:()=>stop(d),m:()=>$('#bMute').click(),f:full,v:toggleTelly,r:()=>$('#bRep').click(),
+  n:()=>step(d,1),p:()=>step(d,-1),s:()=>stop(d),m:()=>$('#bMute').click(),f:full,v:toggleTelly,r:()=>$('#bRep').click(),e:editor,
   '1':()=>{sel=0},'2':()=>{sel=1},ArrowUp:()=>vk(5),ArrowDown:()=>vk(-5)}[e.key.length>1?e.key:e.key.toLowerCase()];
  if(m){e.preventDefault();m();ui()}});
 if('mediaSession' in navigator){const ms=navigator.mediaSession,h=(a,f)=>{try{ms.setActionHandler(a,()=>{f();ui()})}catch(e){}},c=()=>cur?cur.d:sel;
  h('play',()=>play(c()));h('pause',()=>pause(c()));h('previoustrack',()=>step(c(),-1));h('nexttrack',()=>step(c(),1));
  h('seekbackward',()=>seekBy(c(),-10));h('seekforward',()=>seekBy(c(),10))}
+/* ---- tape editor ---- */
+let E={};try{E=JSON.parse(localStorage.getItem('mixtape-edits'))||{}}catch(e){}
+T.forEach(t=>t.tracks.forEach(r=>{if(E[r.src])Object.assign(r,E[r.src])}));
+const esc=v=>String(v==null?'':v).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function editor(){
+ $('#edBody').innerHTML=T.map((t,ti)=>`<h3>${esc(t.name)}</h3>`+t.tracks.map((r,i)=>{
+  const f=(k,ph,c)=>`<input class="${c||''}" data-t="${ti}" data-i="${i}" data-f="${k}" value="${esc(r[k])}" placeholder="${ph}" aria-label="${ph}">`;
+  return `<div class="erow">${f('t','Song name')}${f('a','Artist')}${f('r','Why you recommend it (scrolls on the deck)','rs')}<div class="src">${esc(r.src.startsWith('blob:')?'(added this session)':r.src)}</div></div>`}).join('')).join('');
+ $('#edCode').hidden=true;$('#editor').showModal()}
+$('#bEdit').onclick=editor;$('#edClose').onclick=()=>$('#editor').close();
+$('#editor').addEventListener('input',e=>{const d=e.target.dataset;if(!d.f)return;const r=T[+d.t].tracks[+d.i];r[d.f]=e.target.value;
+ if(!r.src.startsWith('blob:')){E[r.src]={t:r.t,a:r.a,r:r.r||''};try{localStorage.setItem('mixtape-edits',JSON.stringify(E))}catch(x){}}
+ rev++;ui()});
+$('#edCopy').onclick=()=>{const code='const T='+JSON.stringify(T.map(t=>({...t,tracks:t.tracks.filter(r=>!r.src.startsWith('blob:'))})),null,1)+';';
+ const ta=$('#edCode');ta.hidden=false;ta.value=code;ta.select();try{navigator.clipboard.writeText(code)}catch(x){}};
+$('#edReset').onclick=()=>{if(confirm('Forget the edits saved in this browser?')){try{localStorage.removeItem('mixtape-edits')}catch(x){}location.reload()}};
 ui();
 </script>
 </body>

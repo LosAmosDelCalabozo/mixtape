@@ -39,6 +39,7 @@ A single-page, 90s British mini hi-fi with two cassette decks, a Ceefax-style te
    - `src`: path to the video file, relative to `index.html`
    - `t`: song title (shown on the teletext)
    - `a`: artist
+   - `r`: reason (optional), a line about why you picked the song. It scrolls across the deck's display
 
 Add or remove tracks freely. The teletext page numbers and the tape-reel animation adjust automatically. You can also change a tape's `name`, the handwritten subtitle `sub`, the label `stripe` colour, and `fs` (the label font size, which you can lower if a long name doesn't fit).
 
@@ -102,12 +103,14 @@ Only one deck plays at a time. Starting a deck pauses the other where it was, an
 - **Mute** and a **Pitch** slider (±10%). Pitch behaves like a real tape deck, so speed and pitch move together. Double-click the slider to reset it.
 - **Add videos:** pick video or audio files from your computer to add to the tape shown on the teletext. They last until you reload the page, and they aren't uploaded anywhere.
 - **On-video controls:** move the mouse over the video (or tap it) to get transport buttons, a seek bar, mute and full screen on the picture itself, including in full screen. Click the picture to play or pause, and double-click it for full screen.
+- **Edit tapes:** the **Edit tapes** button (or `E`) opens a form where you can change each song's name, artist and reason. Changes show instantly and are remembered in your browser only. To make them permanent for everyone, press **Copy tapes code** and paste it over the `const T=[...]` block in `index.html`, then commit and push. **Reset my edits** clears what your browser saved.
+- **Reason marquee:** each deck has a scrolling display showing the reason for the current song (or its name and artist if there isn't one).
 - **Pop out:** floats the video in a small window (Picture-in-Picture) where the browser supports it.
 - **Lock-screen and media-key controls:** the current title and artist show up in your OS or phone media controls.
 
 ## Keyboard shortcuts
 
-Space play/pause · ←/→ seek 5s (Shift for 30s) · N / P next / previous · S stop · M mute · F full screen · V show/hide video · 1 / 2 switch tape · ↑/↓ volume · R repeat
+Space play/pause · ←/→ seek 5s (Shift for 30s) · N / P next / previous · S stop · M mute · F full screen · V show/hide video · 1 / 2 switch tape · ↑/↓ volume · R repeat · E edit tapes
 
 ## Troubleshooting
 
