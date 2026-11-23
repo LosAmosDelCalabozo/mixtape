@@ -86,6 +86,13 @@ button{font:inherit;color:inherit;cursor:pointer}
 .vol{grid-column:1/3;display:flex;align-items:center;gap:12px;color:#9b9ea5}
 .vol input{flex:1;accent-color:var(--led)}
 
+.seek{height:12px;background:#09090a;border:1px solid #45464b;border-radius:3px;cursor:pointer;position:relative}
+.seek i{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--led);box-shadow:0 0 6px var(--led);border-radius:2px}
+.tm{display:flex;justify-content:space-between;font:20px/1 'VT323';color:var(--led);margin-top:-6px}
+.opts{grid-column:1/3;display:flex;flex-wrap:wrap;gap:8px}
+.opts .bass{font-size:15px;padding:6px 10px}
+output{min-width:3.5em;color:var(--led)}
+.keyhelp{max-width:760px;margin:12px auto 0;text-align:center;color:#5b5140;font-size:14px}
 /* the telly */
 .telly{margin:34px auto 0;max-width:760px;position:relative}
 .bezel{background:linear-gradient(#cdc8ba,#aaa595);border-radius:26px;padding:22px 22px 12px;box-shadow:0 14px 24px rgba(40,20,10,.5),inset 0 2px 0 #eee}
@@ -136,7 +143,16 @@ footer{text-align:center;margin-top:26px;color:#5b5140;font-weight:700}
   <section class="ctl">
    <div id="spec" aria-hidden="true"></div>
    <button class="bass" id="bass" aria-pressed="false"><i></i>Super Bass</button>
+   <div class="opts">
+    <button class="bass" id="bRep" aria-pressed="false"><i></i><span>Repeat: off</span></button>
+    <button class="bass" id="bShuf" aria-pressed="false"><i></i>Shuffle</button>
+    <button class="bass" id="bChain" aria-pressed="false"><i></i>Chain decks</button>
+    <button class="bass" id="bMute" aria-pressed="false"><i></i>Mute</button>
+    <button class="bass" id="bAdd"><i></i>Add videos</button>
+    <input type="file" id="file" accept="video/*,audio/*" multiple hidden>
+   </div>
    <label class="vol">Volume <input type="range" id="vol" min="0" max="100" value="80"></label>
+   <label class="vol">Pitch <input type="range" id="pitch" min="-10" max="10" value="0"><output id="pv">0%</output></label>
   </section>
  </main>
 
@@ -147,25 +163,26 @@ footer{text-align:center;margin-top:26px;color:#5b5140;font-weight:700}
     <video id="yt" playsinline preload="metadata"></video>
     <div class="shield"></div>
    </div>
-   <div class="tbar"><i class="pwr"></i><button id="bTelly">Hide video</button><button id="bFull">Full screen</button><span>Teletext · Fastext · Nicam Stereo</span></div>
+   <div class="tbar"><i class="pwr"></i><button id="bTelly">Hide video</button><button id="bFull">Full screen</button><button id="bPip">Pop out</button><span>Teletext · Fastext · Nicam Stereo</span></div>
   </div>
  </section>
+ <p class="keyhelp">Keys: Space play/pause · ←/→ seek (Shift = 30s) · N/P next/previous · S stop · M mute · F full screen · V show/hide video · 1/2 switch tape · ↑/↓ volume · R repeat</p>
  <footer>Be kind. Rewind.</footer>
 </div>
 
 <script>
 /* ---- EDIT YOUR TAPES HERE: src = path to a video file, relative to this page ---- */
 const T=[
- {name:'Natsukashi', sub:'なつかしい · the good old days', stripe:'#e4352b', fs:31, tracks:[
-  {src:'videos/ouran-opening.mp4', t:'Ouran Host Club Opening', a:'Opening'}]},
- {name:'Recommendations', sub:'tracks you should hear', stripe:'#2b64d9', fs:25, tracks:[
-  {src:'videos/sakura-kiss.mp4', t:'Sakura Kiss', a:'Radio edit'}]}
+ {name:'Natsukashi',sub:'なつかしい · the good old days',stripe:'#e4352b',fs:31,tracks:[
+  {src:'videos/ouran-opening.mp4',t:'Ouran Host Club Opening',a:'Opening'}]},
+ {name:'Recommendations',sub:'tracks you should hear',stripe:'#2b64d9',fs:25,tracks:[
+  {src:'videos/sakura-kiss.mp4',t:'Sakura Kiss',a:'Radio edit'}]}
 ];
 /* ------------------------------------------------------------------------- */
 const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
 const D=T.map(()=>({i:0,time:0,dur:0,mode:'stop'}));
 const MOVING=['play','ff','rew'];
-let sel=0,ready=true,cur=null,wt=null,vol=80,errs=0,msg='',mt=0,sig='',AC;
+let sel=0,ready=true,userMute=false,opt={rep:0,shuf:false,chain:false},cur=null,wt=null,vol=80,errs=0,msg='',mt=0,sig='',AC;
 
 const KEYS=[['prev','|◀','Previous track'],['rew','◀◀','Rewind'],['play','▶','Play'],['ff','▶▶','Fast forward'],['next','▶|','Next track'],['pause','❚❚','Pause'],['stop','■','Stop']];
 const cassette=t=>`<svg viewBox="0 0 300 190" role="img" aria-label="Cassette: ${t.name}">
@@ -186,8 +203,10 @@ $$('.deck').forEach((el,d)=>{
  el.dataset.m='stop';
  el.innerHTML=`<div class="dh"><b>Deck ${'AB'[d]}</b><span class="lcd"><b class="cnt">000</b><i class="st">STOP</i></span></div>
  <div class="door">${cassette(T[d])}</div>
+ <div class="seek" tabindex="0" role="slider" aria-label="Tape position"><i></i></div><div class="tm"><span class="te">0:00</span><span class="tr">-0:00</span></div>
  <div class="keys">${KEYS.map(k=>`<button data-k="${k[0]}" aria-label="${k[2]}" title="${k[2]}">${k[1]}</button>`).join('')}</div>`;
- el.addEventListener('click',e=>{const b=e.target.closest('[data-k]');if(b){sel=d;ACT[b.dataset.k](d);ui()}});
+ el.addEventListener('click',e=>{const b=e.target.closest('[data-k]');if(b){sel=d;ACT[b.dataset.k](d);ui();return}
+  const sk=e.target.closest('.seek');if(sk){const r=sk.getBoundingClientRect();seekFrac(d,(e.clientX-r.left)/r.width)}});
 });
 
 /* ---- sound of a chunky button ---- */
@@ -201,12 +220,13 @@ const P={
  load(src,t){V.src=src;if(t)V.addEventListener('loadedmetadata',()=>{V.currentTime=t},{once:true});V.play().catch(()=>{})},
  playVideo(){V.play().catch(()=>{})},pauseVideo(){V.pause()},seekTo(t){V.currentTime=t},
  getCurrentTime:()=>V.currentTime||0,getDuration:()=>V.duration||0,
- mute(){V.muted=true},unMute(){V.muted=false},setVolume(v){V.volume=v/100}};
+ mute(){V.muted=true},unMute(){V.muted=false},setVolume(v){V.volume=userMute?0:v/100}};
 V.onended=()=>{if(cur)endNext(cur.d)};V.onplaying=()=>{errs=0};V.onerror=()=>onErr();
 
 function say(s,ms=4000){msg=s;clearTimeout(mt);mt=setTimeout(()=>{msg=''},ms);ui()}
 function nope(){say('PLAYER STILL LOADING - TRY AGAIN',2500)}
-function load(d,i,t){cur={d,i};$('#screen').classList.remove('idle');P.load(T[d].tracks[i].src,t)}
+function load(d,i,t){cur={d,i};$('#screen').classList.remove('idle');const r=T[d].tracks[i];P.load(r.src,t);
+ if(window.MediaMetadata)navigator.mediaSession.metadata=new MediaMetadata({title:r.t,artist:r.a,album:T[d].name})}
 function halt(d){clearInterval(wt);const k=D[d];if(MOVING.includes(k.mode))k.time=P.getCurrentTime()||k.time;if(k.mode!=='stop')k.mode='pause';P.pauseVideo()}
 function play(d){const k=D[d];if(!ready)return nope();clunk();clearInterval(wt);if(cur&&cur.d!==d)halt(cur.d);
  if(!cur||cur.d!==d||cur.i!==k.i)load(d,k.i,k.time);
@@ -224,9 +244,16 @@ function wind(d,s){const k=D[d];if(!ready)return nope();if(k.mode===(s>0?'ff':'r
 function change(d,i){const k=D[d];k.i=i;k.time=0;k.dur=0;sel=d;
  if(MOVING.includes(k.mode))play(d);else{if(cur&&cur.d===d)cur=null;if(k.mode==='pause')k.mode='stop'}}
 function step(d,s){clunk();const n=T[d].tracks.length;change(d,(D[d].i+s+n)%n)}
-function endNext(d){const k=D[d];
- if(k.i>=T[d].tracks.length-1){stop(d);k.i=0;cur=null;say('END OF TAPE - REWOUND')}
- else{k.mode='play';change(d,k.i+1)}ui()}
+function endNext(d){const k=D[d],n=T[d].tracks.length;
+ if(opt.rep===2){k.mode='play';k.time=0;cur=null;play(d)}
+ else if(opt.shuf&&n>1){let j;do{j=Math.random()*n|0}while(j===k.i);k.mode='play';change(d,j)}
+ else if(k.i>=n-1){
+  if(opt.rep===1){k.mode='play';change(d,0)}
+  else{stop(d);k.i=0;cur=null;
+   if(opt.chain&&T.length>1){const o=(d+1)%T.length;Object.assign(D[o],{i:0,time:0,dur:0});play(o);say('CHAINED TO DECK '+'AB'[o])}
+   else say('END OF TAPE - REWOUND')}}
+ else{k.mode='play';change(d,k.i+1)}
+ ui()}
 function onErr(){errs++;if(!cur)return;const d=cur.d;say('FILE NOT FOUND - SKIPPING');
  if(errs<=T[d].tracks.length){endNext(d)}else{stop(d);ui()}}
 const ACT={play,stop,pause,prev:d=>step(d,-1),next:d=>step(d,1),rew:d=>wind(d,-1),ff:d=>wind(d,1)};
@@ -238,8 +265,9 @@ function ui(){
   $('.cnt',el).textContent=String((k.time|0)%1000).padStart(3,'0');
   $('.st',el).textContent={stop:'STOP',play:'PLAY',pause:'PAUSE',ff:'FF >>',rew:'<< REW'}[k.mode];
   $$('[data-k]',el).forEach(b=>b.classList.toggle('down',b.dataset.k===k.mode));
-  const p=k.dur?Math.min(1,k.time/k.dur):0;$('.pl',el).setAttribute('r',8+11*(1-p));$('.pr',el).setAttribute('r',8+11*p)});
- const k=D[sel],t=T[sel],base=sel?200:100,s=[sel,k.i,k.mode,msg,ready].join();
+  const p=k.dur?Math.min(1,k.time/k.dur):0;$('.pl',el).setAttribute('r',8+11*(1-p));$('.pr',el).setAttribute('r',8+11*p);
+  $('.seek i',el).style.width=(p*100)+'%';$('.te',el).textContent=fmt(k.time);$('.tr',el).textContent='-'+fmt(k.dur?k.dur-k.time:0)});
+ const k=D[sel],t=T[sel],base=sel?200:100,s=[sel,k.i,k.mode,msg,ready,t.tracks.length].join();
  if(s!==sig){sig=s;
   $('#pg').textContent=base+k.i+1;$('#ttName').textContent=t.name+' Text';
   $('#ttTitle').textContent=t.tracks[k.i].t;$('#ttArt').textContent=t.tracks[k.i].a;
@@ -271,6 +299,40 @@ const cells=$$('#spec div').map(c=>[...c.children]);
 setInterval(()=>{const on=D.some(k=>k.mode==='play'),b=bass.getAttribute('aria-pressed')==='true';
  lv=lv.map((v,c)=>{const low=c<3,tg=on?Math.random()*ROWS*(low&&b?1.25:.8)+(low?1.5:0):0;return Math.max(0,Math.min(ROWS,v+(tg-v)*.5-(on?0:.6)))});
  cells.forEach((col,c)=>col.forEach((x,r)=>x.classList.toggle('on',r<Math.round(lv[c]))))},110);
+
+/* ---- seeking ---- */
+function seekFrac(d,f){const k=D[d];if(!k.dur)return;k.time=Math.max(0,Math.min(.999,f))*k.dur;if(cur&&cur.d===d)P.seekTo(k.time);sel=d;ui()}
+const seekBy=(d,s)=>{const k=D[d];if(k.dur)seekFrac(d,(k.time+s)/k.dur)};
+
+/* ---- repeat, shuffle, chain, mute, add videos ---- */
+const tgl=(b,on,txt)=>{b.setAttribute('aria-pressed',on);if(txt)$('span',b).textContent=txt};
+$('#bRep').onclick=()=>{clunk();opt.rep=(opt.rep+1)%3;tgl($('#bRep'),opt.rep>0,'Repeat: '+['off','tape','one'][opt.rep])};
+$('#bShuf').onclick=()=>{clunk();opt.shuf=!opt.shuf;tgl($('#bShuf'),opt.shuf)};
+$('#bChain').onclick=()=>{clunk();opt.chain=!opt.chain;tgl($('#bChain'),opt.chain)};
+$('#bMute').onclick=()=>{userMute=!userMute;P.setVolume(vol);tgl($('#bMute'),userMute)};
+$('#bAdd').onclick=()=>$('#file').click();
+$('#file').onchange=e=>{[...e.target.files].forEach(f=>T[sel].tracks.push({src:URL.createObjectURL(f),t:f.name.replace(/\.[^.]+$/,''),a:'My file'}));e.target.value='';ui()};
+
+/* ---- tape-style pitch control (speed and pitch move together) ---- */
+V.preservesPitch=V.mozPreservesPitch=V.webkitPreservesPitch=false;
+const pitch=$('#pitch');
+pitch.oninput=()=>{V.defaultPlaybackRate=V.playbackRate=1+pitch.value/100;$('#pv').textContent=(pitch.value>0?'+':'')+pitch.value+'%'};
+pitch.ondblclick=()=>{pitch.value=0;pitch.oninput()};
+
+/* ---- pop-out video, keyboard, lock-screen controls ---- */
+$('#bPip').onclick=()=>{if(document.pictureInPictureElement)document.exitPictureInPicture();
+ else if(V.requestPictureInPicture)V.requestPictureInPicture().catch(()=>say('POP-OUT NOT AVAILABLE'));else say('POP-OUT NOT SUPPORTED HERE')};
+const vk=n=>{const v=$('#vol');v.value=+v.value+n;v.oninput({target:v})};
+addEventListener('keydown',e=>{
+ if(e.ctrlKey||e.metaKey||e.altKey||e.target.tagName==='INPUT'||(e.target.tagName==='BUTTON'&&(e.key===' '||e.key==='Enter')))return;
+ const d=sel,k=D[d],big=e.shiftKey?30:5,
+ m={' ':()=>k.mode==='play'?pause(d):play(d),ArrowLeft:()=>seekBy(d,-big),ArrowRight:()=>seekBy(d,big),
+  n:()=>step(d,1),p:()=>step(d,-1),s:()=>stop(d),m:()=>$('#bMute').click(),f:full,v:toggleTelly,r:()=>$('#bRep').click(),
+  '1':()=>{sel=0},'2':()=>{sel=1},ArrowUp:()=>vk(5),ArrowDown:()=>vk(-5)}[e.key.length>1?e.key:e.key.toLowerCase()];
+ if(m){e.preventDefault();m();ui()}});
+if('mediaSession' in navigator){const ms=navigator.mediaSession,h=(a,f)=>{try{ms.setActionHandler(a,()=>{f();ui()})}catch(e){}},c=()=>cur?cur.d:sel;
+ h('play',()=>play(c()));h('pause',()=>pause(c()));h('previoustrack',()=>step(c(),-1));h('nexttrack',()=>step(c(),1));
+ h('seekbackward',()=>seekBy(c(),-10));h('seekforward',()=>seekBy(c(),10))}
 ui();
 </script>
 </body>

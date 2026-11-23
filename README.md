@@ -79,7 +79,7 @@ python3 -m http.server 8000
 
 | Control | What it does |
 | --- | --- |
-| `|◀` / `▶|` | Previous / next track on that tape |
+| Previous / next keys | Previous / next track on that tape |
 | `◀◀` / `▶▶` | Rewind / fast forward (sound is muted while winding). Press again to resume playing |
 | `▶` | Play |
 | `❚❚` | Pause. Press again to resume |
@@ -92,6 +92,21 @@ python3 -m http.server 8000
 | Volume | Output volume |
 
 Only one deck plays at a time. Starting a deck pauses the other where it was, and it picks up from that spot when you press play on it again. When a track ends the tape moves to the next one, and at the end of the tape it stops and rewinds.
+
+## Extra features
+
+- **Seek bar:** each deck has a tape-position bar with elapsed and remaining time. Click it to jump.
+- **Repeat:** cycles off, repeat the tape, or repeat one track.
+- **Shuffle:** plays tracks in random order.
+- **Chain decks:** when one tape ends, the other deck starts.
+- **Mute** and a **Pitch** slider (±10%). Pitch behaves like a real tape deck, so speed and pitch move together. Double-click the slider to reset it.
+- **Add videos:** pick video or audio files from your computer to add to the tape shown on the teletext. They last until you reload the page, and they aren't uploaded anywhere.
+- **Pop out:** floats the video in a small window (Picture-in-Picture) where the browser supports it.
+- **Lock-screen and media-key controls:** the current title and artist show up in your OS or phone media controls.
+
+## Keyboard shortcuts
+
+Space play/pause · ←/→ seek 5s (Shift for 30s) · N / P next / previous · S stop · M mute · F full screen · V show/hide video · 1 / 2 switch tape · ↑/↓ volume · R repeat
 
 ## Troubleshooting
 
